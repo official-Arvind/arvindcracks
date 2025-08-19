@@ -25,7 +25,7 @@ const LoadingScreen: React.FC = () => {
                 className="w-12 h-12 bg-white rounded-xl flex items-center justify-center"
               >
                 <Zap className="w-6 h-6 text-primary-600" />
-              </div>
+              </motion.div>
             </div>
           </div>
         </motion.div>

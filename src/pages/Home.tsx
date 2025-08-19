@@ -14,10 +14,16 @@ import {
   Filter
 } from 'lucide-react';
 import SoftwareCard from '../components/SoftwareCard';
-import { mockSoftware } from '../data/mockData';
 
 const Home: React.FC = () => {
-  const [featuredSoftware, setFeaturedSoftware] = useState(mockSoftware.slice(0, 6));
+  const [featuredSoftware, setFeaturedSoftware] = useState([]);
+
+  useEffect(() => {
+    fetch('/data/scraped_software.json')
+      .then(res => res.json())
+      .then(data => setFeaturedSoftware(data.slice(0, 6)))
+      .catch(() => setFeaturedSoftware([]));
+  }, []);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
 

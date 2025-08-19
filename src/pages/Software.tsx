@@ -2,10 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Filter, Grid, List, SortAsc } from 'lucide-react';
 import SoftwareCard from '../components/SoftwareCard';
-import { mockSoftware } from '../data/mockData';
+import type { Software } from '../data/mockData';
 
 const Software: React.FC = () => {
-  const [software, setSoftware] = useState(mockSoftware);
+  const [software, setSoftware] = React.useState<Software[]>([]);
+
+  React.useEffect(() => {
+    fetch('/data/scraped_software.json')
+      .then(res => res.json())
+      .then(data => setSoftware(data))
+      .catch(() => setSoftware([]));
+  }, []);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('name');
