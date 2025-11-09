@@ -47,13 +47,10 @@ const Header: React.FC<HeaderProps> = ({ darkMode, toggleDarkMode }) => {
               <div className="w-10 h-10 bg-gradient-to-r from-primary-600 to-primary-400 rounded-xl flex items-center justify-center transform group-hover:scale-110 transition-transform duration-200">
                 <Zap className="w-6 h-6 text-white" />
               </div>
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
-                <span className="text-xs text-white font-bold">!</span>
-              </div>
             </div>
             <div>
               <h1 className="text-xl font-bold gradient-text">Arvind Ji Cracks</h1>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Premium Software Hub</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Curated software & repacks — discover, compare, download</p>
             </div>
           </Link>
 
