@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+  "build": "vite build && mkdir -p dist/data && cp -R data/* dist/data || true",
     "preview": "vite preview",
     "scraper": "node server/scraper.js",
+    "upload-data": "node scripts/uploadToFirestore.js",
     "deploy": "npm run build && firebase deploy --only hosting --project arvindjicracks"
   },
   "dependencies": {
@@ -15,6 +16,7 @@
     "cheerio": "^1.0.0-rc.12",
     "cors": "^2.8.5",
     "express": "^4.18.2",
+    "firebase": "^9.23.0",
     "firebase-cli": "^1.2.0",
     "framer-motion": "^10.16.16",
     "lucide-react": "^0.344.0",

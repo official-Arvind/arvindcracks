@@ -4,22 +4,33 @@ import { motion } from 'framer-motion';
 import { 
   Download, 
   Star, 
-  Calendar, 
   Shield, 
   ExternalLink,
   ArrowLeft,
   Share2,
   Heart,
-  MessageCircle,
   ThumbsUp,
   ThumbsDown,
   AlertTriangle
 } from 'lucide-react';
-import { mockSoftware } from '../data/mockData';
+import { db } from '../firebase';
+import { doc, setDoc, updateDoc, increment, getDoc } from 'firebase/firestore';
+import type { Software } from '../data/mockData';
 
 const SoftwareDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const [software, setSoftware] = useState(mockSoftware.find(s => s.id === id));
+  const [software, setSoftware] = useState<Software | undefined>(undefined);
+
+  useEffect(() => {
+    if (!id) return;
+    fetch('/data/scraped_software.json')
+      .then(res => res.json())
+      .then((data: Software[]) => {
+        const found = data.find((s) => s.id === id);
+        setSoftware(found);
+      })
+      .catch(() => setSoftware(undefined));
+  }, [id]);
   const [activeTab, setActiveTab] = useState('description');
   const [isFavorite, setIsFavorite] = useState(false);
 
@@ -346,10 +357,26 @@ const SoftwareDetail: React.FC = () => {
               </h3>
               <div className="space-y-3">
                 {downloadLinks.map((link, index) => (
-                  <a
+                  <button
                     key={index}
-                    href={link.url}
-                    className="block p-3 bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-700 hover:to-primary-600 text-white rounded-lg transition-all duration-200 transform hover:scale-105"
+                    onClick={async () => {
+                      try {
+                        // Increment download counter in Firestore (doc id = software.id)
+                        const downloadRef = doc(db, 'downloads', software.id);
+                        const snap = await getDoc(downloadRef);
+                        if (snap.exists()) {
+                          await updateDoc(downloadRef, { count: increment(1) });
+                        } else {
+                          await setDoc(downloadRef, { count: 1 });
+                        }
+                      } catch (err) {
+                        console.error('Download tracking error', err);
+                      } finally {
+                        // Open the link regardless
+                        window.open(link.url, '_blank');
+                      }
+                    }}
+                    className="w-full text-left block p-3 bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-700 hover:to-primary-600 text-white rounded-lg transition-all duration-200 transform hover:scale-105"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
@@ -361,7 +388,7 @@ const SoftwareDetail: React.FC = () => {
                     <div className="text-xs text-white/80 mt-1">
                       {link.speed}
                     </div>
-                  </a>
+                  </button>
                 ))}
               </div>
 

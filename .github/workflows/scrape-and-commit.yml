@@ -1,0 +1,43 @@
+name: Scheduled Scrape and Deploy
+
+on:
+  schedule:
+    - cron: '0 */6 * * *' # every 6 hours
+  workflow_dispatch: {}
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run scraper
+        run: npm run scraper
+
+      - name: Commit scraped data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git add data/scraped_software.json || true
+            git commit -m "chore: update scraped data [skip ci]" || true
+            git push
+          else
+            echo "No changes to commit"
+          fi
+
+      - name: Deploy to Firebase (optional)
+        if: secrets.FIREBASE_TOKEN != ''
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        run: |
+          npm run build
+          npx firebase-tools deploy --only hosting --project arvindjicracks --token "$FIREBASE_TOKEN"

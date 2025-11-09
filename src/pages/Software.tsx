@@ -3,15 +3,31 @@ import { motion } from 'framer-motion';
 import { Search, Filter, Grid, List, SortAsc } from 'lucide-react';
 import SoftwareCard from '../components/SoftwareCard';
 import type { Software } from '../data/mockData';
+import { db } from '../firebase';
+import { collection, getDocs } from 'firebase/firestore';
 
 const Software: React.FC = () => {
   const [software, setSoftware] = React.useState<Software[]>([]);
 
   React.useEffect(() => {
-    fetch('/data/scraped_software.json')
-      .then(res => res.json())
-      .then(data => setSoftware(data))
+    let mounted = true;
+    Promise.all([
+      fetch('/data/scraped_software.json').then(res => res.json()),
+      getDocs(collection(db, 'downloads')).then(col => col.docs.map(d => ({ id: d.id, count: d.data().count || 0 })))
+    ])
+      .then(([data, downloads]) => {
+        if (!mounted) return;
+        // merge download counts
+        const countsMap: Record<string, number> = {};
+        downloads.forEach(d => { countsMap[d.id] = d.count; });
+        const merged = data.map((item: Software) => ({
+          ...item,
+          downloads: countsMap[item.id] ? String(countsMap[item.id]) : item.downloads
+        }));
+        setSoftware(merged);
+      })
       .catch(() => setSoftware([]));
+    return () => { mounted = false };
   }, []);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
