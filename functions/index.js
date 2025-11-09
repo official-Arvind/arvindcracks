@@ -75,4 +75,60 @@ app.get('/api/categories', async (req, res) => {
   }
 });
 
+// POST /api/sync
+// Fetches the hosted scraped JSON and writes it into Firestore `software` collection.
+// Protect this endpoint by setting a sync key in functions config: `firebase functions:config:set sync.key="YOUR_SECRET"`
+app.post('/api/sync', async (req, res) => {
+  try {
+    // check key
+    const provided = req.query.key || req.get('x-sync-key');
+    const cfg = functions.config && functions.config().sync;
+    const expected = (cfg && cfg.key) || process.env.SYNC_KEY;
+    if (!expected || provided !== expected) {
+      return res.status(403).json({ success: false, message: 'Forbidden' });
+    }
+
+    const SCRAPED_JSON_URL = 'https://arvindjicracks.web.app/data/scraped_software.json';
+    const fetch = require('node-fetch');
+    const r = await fetch(SCRAPED_JSON_URL);
+    if (!r.ok) return res.status(502).json({ success: false, message: 'Failed to fetch scraped JSON' });
+    const items = await r.json();
+
+    if (!Array.isArray(items)) return res.status(400).json({ success: false, message: 'Invalid JSON format' });
+
+    // batch write
+    const batchLimit = 400;
+    let batch = db.batch();
+    let ops = 0;
+    let batches = 0;
+
+    for (const item of items) {
+      const id = item.id || (item.title && item.title.toLowerCase().replace(/[^a-z0-9-_]/g, '-')) || Math.random().toString(36).slice(2,10);
+      const ref = db.collection('software').doc(id);
+      const doc = Object.assign({}, item, {
+        id,
+        title_lower: (item.title || '').toLowerCase(),
+        description_lower: (item.description || '').toLowerCase(),
+      });
+      batch.set(ref, doc, { merge: true });
+      ops++;
+      if (ops >= batchLimit) {
+        await batch.commit();
+        batches++;
+        batch = db.batch();
+        ops = 0;
+      }
+    }
+    if (ops > 0) {
+      await batch.commit();
+      batches++;
+    }
+
+    res.json({ success: true, message: 'Synced', batches });
+  } catch (err) {
+    console.error('api/sync error', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 exports.api = functions.https.onRequest(app);
