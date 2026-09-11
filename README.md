@@ -1,7 +1,3 @@
-Of course, here is a more complete and well-documented README for the "arvindcracks" repository, with the placeholder sections filled in with relevant information based on the project's structure.
-
-***
-
 <div align="left" style="position: relative;">
 <img src="https://raw.githubusercontent.com/PKief/vscode-material-icon-theme/ec559a9f6bfd399b82bb44393651661b08aaf7ba/icons/folder-markdown-open.svg" align="right" width="30%" style="margin: -20px 0 0 20px;">
 <h1>ARVINDCRACKS</h1>
